@@ -25,7 +25,7 @@ const arrayLength = (array) => array.length - 1;
 
 const appendImage = (pokemon) => {
   const img = document.createElement('img');
-  img.src = pokemon.sprites.front_default;
+  img.src = pokemon.sprites.other.dream_world.front_default;
   img.id = 'silhouette__img'
   img.style.filter = 'brightness(0)';
   img.style.height = '200px'
