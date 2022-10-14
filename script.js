@@ -1,11 +1,17 @@
+const scoreCheck = document.querySelector('.scoreCheck');
 const score = document.querySelector('.score');
 const silhouette = document.querySelector('.silhouette');
+const pokeNameDiv = document.querySelector('.pokeNameDiv');
 const buttonsArray = document.querySelectorAll('.buttonChoice');
 
 const buttons = Array.from(buttonsArray);
+let sum = 0;
+
 let arrayGlobal = [];
 let pokeGlobal = '';
-score.innerText = '';
+scoreCheck.innerText = '';
+pokeNameDiv.innerText = '';
+score.innerText = 'Pontuação: 0';
 
 const fetchPoke = async () => {
   const url = `https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0`;
@@ -33,8 +39,8 @@ const getRandomPokemon = (callback) => {
   fetchPoke().then(({ results }) => {
     const pokeUrl = results[randomNumber(arrayLength(results))].url;
     const pokePromise = fetch(pokeUrl);
-    pokePromise.
-        then((json) => json.json())
+    pokePromise
+        .then((json) => json.json())
         .then((pokemon) => {
           callback(pokemon);
           buttons.forEach((e, i) => e.innerText = arrayGlobal.sort()[i])
@@ -48,25 +54,48 @@ const fillArrayNames = () => {
   for (let i = 0; i < 3; i++) {
     getRandomPokemon(getNames);
   }
-}
+};
 
-const revealPoke = () => {
+const disableButton = () => {
+  buttons.forEach((button) => button.disabled = true)
+};
+
+const enableButton = () => {
+  buttons.forEach((button) => button.disabled = false)
+};
+
+const revealPokeSetup = () => {
+  arrayGlobal = [];
+  fillArrayNames();
+  scoreCheck.innerText = '';
+  pokeNameDiv.innerText = '';
+  getRandomPokemon(appendImage);
+  enableButton();
+};
+
+const controlBrightness = () => {
   const silhouetteImg = document.querySelector('#silhouette__img');
   silhouetteImg.style.filter = 'brightness(1)';
+};
+
+const revealPoke = () => {
+  pokeNameDiv.innerText = pokeGlobal;
+  controlBrightness();
+  disableButton();
   setTimeout(() => {
-    arrayGlobal = [];
-    fillArrayNames();
-    score.innerText = '';
-    getRandomPokemon(appendImage);
-  }, 500);
+    revealPokeSetup();
+  }, 2000);
 };
 
 const checkPoke = (pokeName) => {
   if (pokeName === pokeGlobal) {
-    score.innerText = 'acertou';
+    sum += 10;
+    scoreCheck.innerText = 'acertou';
   } else {
-    score.innerText = 'errou';
+    sum -= 3;
+    scoreCheck.innerText = 'errou';    
   }
+  score.innerText = `Pontuação: ${sum}`;
 }
 
 getRandomPokemon(appendImage);
