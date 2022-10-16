@@ -3,9 +3,13 @@ const score = document.querySelector('.score');
 const silhouette = document.querySelector('.silhouette');
 const pokeNameDiv = document.querySelector('.pokeNameDiv');
 const buttonsArray = document.querySelectorAll('.buttonChoice');
+const tip1 = document.querySelector('.tip1');
+const flash = document.querySelector('.tip2');
 
 const buttons = Array.from(buttonsArray);
 let sum = 0;
+let quantityTipOne = 3;
+let quantityTipFlash = 3;
 
 let arrayGlobal = [];
 let pokeGlobal = '';
@@ -23,22 +27,12 @@ const randomNumber = (maxValue) => Math.floor(Math.random() * maxValue);
 
 const arrayLength = (array) => array.length - 1;
 
-const apiImgSrc = (pokemon) => {
+const apiImgSrc = (pokemon, callbackSrc) => {
   let src =  pokemon.sprites.other.dream_world.front_default;
-  if (src === null) src = pokemon.sprites.other['official-artwork'].front_default
+  if (src === null) src = pokemon.sprites.other['official-artwork'].front_default;
+  if (src === null) src = pokemon.sprites.front_default;
   return src;
 };
-
-const appendImage = (pokemon) => {
-  const img = document.createElement('img');
-  img.src = apiImgSrc(pokemon);
-  img.id = 'silhouette__img'
-  img.style.filter = 'brightness(0)';
-  img.style.height = '200px'
-  silhouette.appendChild(img);
-  arrayGlobal.push(pokemon.name);
-  pokeGlobal = pokemon.name;
-}
 
 const getRandomPokemon = (callback) => {
   silhouette.innerHTML = null;
@@ -54,6 +48,17 @@ const getRandomPokemon = (callback) => {
   });
 };
 
+const appendImage = (pokemon) => {
+  const img = document.createElement('img');
+  img.src = apiImgSrc(pokemon);
+  img.id = 'silhouette__img'
+  img.style.filter = 'brightness(0)';
+  img.style.height = '200px'
+  silhouette.appendChild(img);
+  arrayGlobal.push(pokemon.name);
+  pokeGlobal = pokemon.name;
+}
+
 const getNames = (pokemon) => arrayGlobal.push(pokemon.name);
 
 const fillArrayNames = () => {
@@ -63,11 +68,15 @@ const fillArrayNames = () => {
 };
 
 const disableButton = () => {
-  buttons.forEach((button) => button.disabled = true)
+  buttons.forEach((button) => button.disabled = true);
+  tip1.disabled = true;
+  flash.disabled = true;
 };
 
 const enableButton = () => {
-  buttons.forEach((button) => button.disabled = false)
+  buttons.forEach((button) => button.disabled = false);
+  if (quantityTipOne > 0) tip1.disabled = false;
+  if (quantityTipFlash > 0) flash.disabled = false;
 };
 
 const revealPokeSetup = () => {
@@ -79,14 +88,14 @@ const revealPokeSetup = () => {
   enableButton();
 };
 
-const controlBrightness = () => {
+const controlBrightness = (ammount) => {
   const silhouetteImg = document.querySelector('#silhouette__img');
-  silhouetteImg.style.filter = 'brightness(1)';
+  silhouetteImg.style.filter = `brightness(${ammount})`;
 };
 
 const revealPoke = () => {
   pokeNameDiv.innerText = pokeGlobal;
-  controlBrightness();
+  controlBrightness(1);
   disableButton();
   setTimeout(() => {
     revealPokeSetup();
@@ -104,8 +113,16 @@ const checkPoke = (pokeName) => {
   score.innerText = `Pontuação: ${sum}`;
 }
 
-getRandomPokemon(appendImage);
-fillArrayNames();
+const tipOne = () => {
+  const filterPokeName = arrayGlobal.filter((poke)  => poke !== pokeGlobal);
+  Math.random() < 0.5 ? filterPokeName.pop() : filterPokeName.shift();
+  buttons.flatMap((e) => {
+    if (filterPokeName.includes(e.innerText)) {
+      e.disabled = true;
+    }
+  })
+  if (quantityTipOne <= 0) tip1.disabled = true;
+}
 
 buttons.forEach((button) => {
   button.addEventListener('click', ({ target }) => {
@@ -113,3 +130,31 @@ buttons.forEach((button) => {
     revealPoke();
   })
 })
+
+tip1.addEventListener('click', () => {
+  if (quantityTipOne > 0) {
+    quantityTipOne -= 1;
+    tipOne();
+    tip1.disabled = true;
+  }
+  tip1.innerText = `50/50: ${quantityTipOne}`;
+});
+
+flash.addEventListener('click', () => {
+  if (quantityTipFlash > 0) {
+    quantityTipFlash -= 1;
+    setTimeout(() => {
+      controlBrightness(1);
+      setTimeout(() => {
+        controlBrightness(0);
+      }, 200)
+    }, 500);
+   
+    flash.disabled = true;
+  }
+  flash.innerText = `Flash: ${quantityTipFlash}`;
+
+})
+
+getRandomPokemon(appendImage);
+fillArrayNames();
