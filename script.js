@@ -5,11 +5,13 @@ const pokeNameDiv = document.querySelector('.pokeNameDiv');
 const buttonsArray = document.querySelectorAll('.buttonChoice');
 const tip1 = document.querySelector('.tip1');
 const flash = document.querySelector('.tip2');
+const hearthContainer = document.querySelector('.hearthContainer');
 
 const buttons = Array.from(buttonsArray);
 let sum = 0;
 let quantityTipOne = 3;
 let quantityTipFlash = 3;
+let chances = 5;
 
 let arrayGlobal = [];
 let pokeGlobal = '';
@@ -27,16 +29,16 @@ const randomNumber = (maxValue) => Math.floor(Math.random() * maxValue);
 
 const arrayLength = (array) => array.length - 1;
 
-const apiImgSrc = (pokemon, callbackSrc) => {
+const apiImgSrc = (pokemon) => {
   let src =  pokemon.sprites.other.dream_world.front_default;
   if (src === null) src = pokemon.sprites.other['official-artwork'].front_default;
   if (src === null) src = pokemon.sprites.front_default;
   return src;
 };
 
-const getRandomPokemon = (callback) => {
+const getRandomPokemon = async (callback) => {
   silhouette.innerHTML = null;
-  fetchPoke().then(({ results }) => {
+  await fetchPoke().then(({ results }) => {
     const pokeUrl = results[randomNumber(arrayLength(results))].url;
     const pokePromise = fetch(pokeUrl);
     pokePromise
@@ -93,6 +95,10 @@ const controlBrightness = (ammount) => {
   silhouetteImg.style.filter = `brightness(${ammount})`;
 };
 
+const checkGameOver = () => {
+  
+};
+
 const revealPoke = () => {
   pokeNameDiv.innerText = pokeGlobal;
   controlBrightness(1);
@@ -102,14 +108,26 @@ const revealPoke = () => {
   }, 2000);
 };
 
+const deleteHearth = () => {
+  const hearth = document.querySelector('.hearth');
+  hearthContainer.removeChild(hearth);
+};
+
 const checkPoke = (pokeName) => {
   if (pokeName === pokeGlobal) {
     sum += 10;
     scoreCheck.innerText = 'acertou';
   } else {
-    sum -= 3;
-    scoreCheck.innerText = 'errou';    
+    scoreCheck.innerText = 'errou';
+    deleteHearth();
+    chances -= 1;    
   }
+  if (chances === 0) {
+    scoreCheck.innerText = 'GAME OVER';
+    pokeNameDiv.innerText = pokeGlobal;
+    controlBrightness(1);
+    disableButton();
+  } 
   score.innerText = `Pontuação: ${sum}`;
 }
 
@@ -124,10 +142,22 @@ const tipOne = () => {
   if (quantityTipOne <= 0) tip1.disabled = true;
 }
 
+const initializeHearths = () => {
+  for (let i = 0; i < chances; i += 1) {
+    const hearth = document.createElement('img');
+    hearth.src = 'src/img/heart.png';
+    hearth.style.width = '20px';
+    hearth.className = 'hearth';
+    hearthContainer.appendChild(hearth);
+  }
+}
+
 buttons.forEach((button) => {
   button.addEventListener('click', ({ target }) => {
     checkPoke(target.innerText);
-    revealPoke();
+    if (chances !== 0) {
+      revealPoke();
+  }
   })
 })
 
@@ -148,13 +178,13 @@ flash.addEventListener('click', () => {
       setTimeout(() => {
         controlBrightness(0);
       }, 200)
-    }, 500);
-   
+    }, 500);   
     flash.disabled = true;
   }
   flash.innerText = `Flash: ${quantityTipFlash}`;
 
 })
 
+initializeHearths();
 getRandomPokemon(appendImage);
 fillArrayNames();
